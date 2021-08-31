@@ -10,13 +10,12 @@ from pathlib import Path
 
 
 MACHINE_CODE = {
-    'pump': 0, 'valve': 1, 'rail_slider': 2, 'fan': 3
+    'pump': 0, 'valve': 1, 'slider': 2, 'fan': 3
 }
 
 INV_MACHINE_CODE = {v: k for k, v in MACHINE_CODE.items()}
 
-PERIOD = 5
-
+PERIOD = 10
 
 class SpectrogramDataset(data.Dataset):
     def __init__(self,
@@ -31,6 +30,11 @@ class SpectrogramDataset(data.Dataset):
         self.waveform_transforms = waveform_transforms
         self.spectrogram_transforms = spectrogram_transforms
         self.melspectrogram_parameters = melspectrogram_parameters
+        
+        self.n_mels = 64
+        self.frames = 5
+        self.n_fft = 2048
+        self.hop_length = 512
 
     def __len__(self):
         return len(self.file_list)
@@ -42,41 +46,45 @@ class SpectrogramDataset(data.Dataset):
         #machine_code = sample["machine_type"]
 
         y, sr = sf.read( wav_path )
-
-        if self.waveform_transforms:
-            y = self.waveform_transforms(y)
-        else:
-            len_y = len(y)
-            effective_length = sr * PERIOD
-            if len_y < effective_length:
-                new_y = np.zeros(effective_length, dtype=y.dtype)
-                start = np.random.randint(effective_length - len_y)
-                new_y[start:start + len_y] = y
-                y = new_y.astype(np.float32)
-            elif len_y > effective_length:
-                start = np.random.randint(len_y - effective_length)
-                y = y[start:start + effective_length].astype(np.float32)
+        images = []
+        for channel in range(y.shape[-1]):
+            if self.waveform_transforms:
+                transformed_y = self.waveform_transforms(y[:, channel])
             else:
-                y = y.astype(np.float32)
+                transformed_y = y[:, channel]
+                len_y = len(transformed_y)
+                effective_length = sr * PERIOD
+                if len_y < effective_length:
+                    new_y = np.zeros(effective_length, dtype=y.dtype)
+                    start = np.random.randint(effective_length - len_y)
+                    new_y[start:start + len_y] = transformed_y
+                    transformed_y = new_y.astype(np.float32)
+                elif len_y > effective_length:
+                    start = np.random.randint(len_y - effective_length)
+                    transformed_y = transformed_y[start:start + effective_length].astype(np.float32)
+                else:
+                    transformed_y = transformed_y.astype(np.float32)
 
-        melspec = librosa.feature.melspectrogram(y, sr=sr, **self.melspectrogram_parameters)
-        melspec = librosa.power_to_db(melspec).astype(np.float32)
+            melspec = librosa.feature.melspectrogram(transformed_y, sr=sr, **self.melspectrogram_parameters)
+            melspec = librosa.power_to_db(melspec).astype(np.float32)
 
-        if self.spectrogram_transforms:
-            melspec = self.spectrogram_transforms(melspec)
-        else:
-            pass
+            if self.spectrogram_transforms:
+                melspec = self.spectrogram_transforms(melspec)
+            else:
+                pass
 
-        image = mono_to_color(melspec)
-        height, width, _ = image.shape
-        image = cv2.resize(image, (int(width * self.img_size / height), self.img_size))
-        image = np.moveaxis(image, 2, 0)
-        image = (image / 255.0).astype(np.float32)
+            image = mono_to_color(melspec)
+            height, width, _ = image.shape
+            #image = cv2.resize(image, (int(width * self.img_size / height), self.img_size))
+            #image = np.moveaxis(image, 2, 0)
+            image = (image / 255.0).astype(np.float32)
+            images.append(image)
 
         labels = np.zeros(len(MACHINE_CODE), dtype=int)
         labels[MACHINE_CODE[emachine_code]] = 1
 
-        return image, labels
+        return np.array(images), labels
+           
 
 def mono_to_color(X: np.ndarray,
                   mean=None,
