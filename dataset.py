@@ -44,7 +44,7 @@ class SpectrogramDataset(data.Dataset):
         #sample = self.df.loc[idx, :]
         #wav_name = sample["wav_filename"]
         #machine_code = sample["machine_type"]
-
+        print(idx, wav_path, emachine_code)
         y, sr = sf.read( wav_path )
         images = []
         for channel in range(y.shape[-1]):
