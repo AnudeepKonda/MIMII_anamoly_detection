@@ -1,4 +1,5 @@
 import typing as tp
+from pathlib import Path
 import cv2
 import librosa
 import numpy as np
@@ -6,7 +7,7 @@ import pandas as pd
 import soundfile as sf
 import torch.utils.data as data
 
-from pathlib import Path
+import matplotlib.pyplot as plt
 
 
 MACHINE_CODE = {
@@ -30,7 +31,7 @@ class SpectrogramDataset(data.Dataset):
         self.waveform_transforms = waveform_transforms
         self.spectrogram_transforms = spectrogram_transforms
         self.melspectrogram_parameters = melspectrogram_parameters
-        
+
         self.n_mels = 64
         self.frames = 5
         self.n_fft = 2048
@@ -44,7 +45,7 @@ class SpectrogramDataset(data.Dataset):
         #sample = self.df.loc[idx, :]
         #wav_name = sample["wav_filename"]
         #machine_code = sample["machine_type"]
-        print(idx, wav_path, emachine_code)
+
         y, sr = sf.read( wav_path )
         images = []
         for channel in range(y.shape[-1]):
@@ -80,11 +81,13 @@ class SpectrogramDataset(data.Dataset):
             image = (image / 255.0).astype(np.float32)
             images.append(image)
 
+        # 1-hot encoding of labels
         labels = np.zeros(len(MACHINE_CODE), dtype=int)
         labels[MACHINE_CODE[emachine_code]] = 1
+        #print(idx, wav_path, emachine_code, labels, MACHINE_CODE[emachine_code])
 
         return np.array(images), labels
-           
+
 
 def mono_to_color(X: np.ndarray,
                   mean=None,
