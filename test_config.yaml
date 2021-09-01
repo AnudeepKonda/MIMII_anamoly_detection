@@ -2,7 +2,7 @@ globals:
   seed: 1213
   device: cuda
   num_epochs: 50
-  output_dir: /kaggle/training_output/
+  output_dir: ./training_output/
   use_fold: 0
   target_sr: 32000
 
