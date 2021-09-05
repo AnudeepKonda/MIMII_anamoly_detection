@@ -2,3 +2,6 @@
 data/
 .ipynb_checkpoints
 __pycache__/
+training_output/
+training_output2/
+

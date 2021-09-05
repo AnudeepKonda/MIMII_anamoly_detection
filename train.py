@@ -53,7 +53,7 @@ def timer(name: str) -> None:
     print("[{}] done in {:.0f} s".format(name, time.time() - t0))
 
 ROOT = Path.cwd()
-INPUT_ROOT = ROOT / "data" / "wav_data"
+INPUT_ROOT = ROOT / "../machine_sound"#"data" / "wav_data"
 
 def get_loaders_for_training(
     args_dataset: tp.Dict, args_loader: tp.Dict,
@@ -71,6 +71,7 @@ def get_loaders_for_training(
 def get_model(args: tp.Dict):
     model =getattr(resnest_torch, args["name"])(pretrained=args["params"]["pretrained"])
     del model.fc
+    #print(model)
     # # use the same head as the baseline notebook.
     model.fc = nn.Sequential(
         nn.Linear(2048, 1024), nn.ReLU(), nn.Dropout(p=0.2),
@@ -91,8 +92,13 @@ def train_loop(
                 data, target = data.to(device), target.to(device)
                 optimizer.zero_grad()
                 output = model(data)
+                #print(output.dtype, target.dtype)
+                #output = output.to(device).float()
+                target = target.type_as(output)
+                #print(output.dtype, target.dtype)
                 loss = loss_func(output, target)
                 ppe.reporting.report({'train/loss': loss.item()})
+                #print(loss)
                 loss.backward()
                 optimizer.step()
                 scheduler.step()
@@ -110,6 +116,7 @@ def eval_for_batch(
     data, target = data.to(device), target.to(device)
     output = model(data)
     # Final result will be average of averages of the same size
+    target = target.type_as(output)
     val_loss = loss_func(output, target).item()
     ppe.reporting.report({'val/loss': val_loss})
 
@@ -195,7 +202,8 @@ if __name__ == "__main__":
     print(train_all.sample(n=5, random_state=1))
     print('All df shape ', train_all.shape)
 
-    train_df, val_df = train_test_split(train_all, test_size=0.2, random_state=1234)
+    train_df, test_df = train_test_split(train_all, test_size=0.15, random_state=1234)
+    train_df, val_df = train_test_split(train_df, test_size=0.15, random_state=1234)
 
     print('Train df shape ', train_df.shape)
     print('Test df shape ', val_df.shape)
@@ -243,7 +251,7 @@ if __name__ == "__main__":
 
     manager = ppe.training.ExtensionsManager(
         model, optimizer, settings["globals"]["num_epochs"],
-        iters_per_epoch=len(train_loader),
+        iters_per_epoch=int(train_dataset.__len__()/settings["loader"]["train"]["batch_size"]),
         stop_trigger=trigger,
         out_dir=output_dir
     )
@@ -263,3 +271,4 @@ if __name__ == "__main__":
     train_loop(
         manager, settings, model, device,
         train_loader, optimizer, scheduler, loss_func)
+

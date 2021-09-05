@@ -24,10 +24,12 @@ class SpectrogramDataset(data.Dataset):
                  img_size=224,
                  waveform_transforms=None,
                  spectrogram_transforms=None,
+                 microphone_id=0,
                  melspectrogram_parameters={}):
 
         self.file_list = file_list  # list of list: [file_path, emachine_code]
         self.img_size = img_size
+        self.microphone_id = microphone_id
         self.waveform_transforms = waveform_transforms
         self.spectrogram_transforms = spectrogram_transforms
         self.melspectrogram_parameters = melspectrogram_parameters
@@ -48,7 +50,7 @@ class SpectrogramDataset(data.Dataset):
 
         y, sr = sf.read( wav_path )
         images = []
-        for channel in range(y.shape[-1]):
+        for channel in [self.microphone_id]:
             if self.waveform_transforms:
                 transformed_y = self.waveform_transforms(y[:, channel])
             else:
@@ -76,8 +78,8 @@ class SpectrogramDataset(data.Dataset):
 
             image = mono_to_color(melspec)
             height, width, _ = image.shape
-            #image = cv2.resize(image, (int(width * self.img_size / height), self.img_size))
-            #image = np.moveaxis(image, 2, 0)
+            image = cv2.resize(image, (int(width * self.img_size / height), self.img_size))
+            image = np.moveaxis(image, 2, 0)
             image = (image / 255.0).astype(np.float32)
             images.append(image)
 
@@ -85,8 +87,11 @@ class SpectrogramDataset(data.Dataset):
         labels = np.zeros(len(MACHINE_CODE), dtype=int)
         labels[MACHINE_CODE[emachine_code]] = 1
         #print(idx, wav_path, emachine_code, labels, MACHINE_CODE[emachine_code])
-
-        return np.array(images), labels
+        
+        if len(images) == 1:
+            return np.array(images[0]), labels
+        else:
+            return np.array(images), labels
 
 
 def mono_to_color(X: np.ndarray,
