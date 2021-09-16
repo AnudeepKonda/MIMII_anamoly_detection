@@ -17,6 +17,7 @@ dataset:
       power: 2.0
       fmin: 20
       fmax: 8000
+    metric_learning: True
 
 split:
   name: StratifiedKFold

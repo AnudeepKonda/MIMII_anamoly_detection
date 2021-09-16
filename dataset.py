@@ -25,7 +25,7 @@ class SpectrogramDataset(data.Dataset):
                  waveform_transforms=None,
                  spectrogram_transforms=None,
                  microphone_id=0,
-                 melspectrogram_parameters={}):
+                 melspectrogram_parameters={}, metric_learning=False):
 
         self.file_list = file_list  # list of list: [file_path, emachine_code]
         self.img_size = img_size
@@ -38,6 +38,8 @@ class SpectrogramDataset(data.Dataset):
         self.frames = 5
         self.n_fft = 2048
         self.hop_length = 512
+
+        self.metric_learning = metric_learning
 
     def __len__(self):
         return len(self.file_list)
@@ -87,11 +89,18 @@ class SpectrogramDataset(data.Dataset):
         labels = np.zeros(len(MACHINE_CODE), dtype=int)
         labels[MACHINE_CODE[emachine_code]] = 1
         #print(idx, wav_path, emachine_code, labels, MACHINE_CODE[emachine_code])
-        
-        if len(images) == 1:
-            return np.array(images[0]), labels
+
+        if self.metric_learning:
+            if len(images) == 1:
+                return np.array(images[0]), MACHINE_CODE[emachine_code]
+            else:
+                return np.array(images), MACHINE_CODE[emachine_code]
+
         else:
-            return np.array(images), labels
+            if len(images) == 1:
+                return np.array(images[0]), labels
+            else:
+                return np.array(images), labels
 
 
 def mono_to_color(X: np.ndarray,

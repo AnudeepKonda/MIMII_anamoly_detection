@@ -9,6 +9,9 @@ Install pfn extras
 
 > pip install pytorch-pfn-extras
 
+Install pytorch_metric_learning
+Install amp from nvidia
+
 # Reference
 Reference
 
