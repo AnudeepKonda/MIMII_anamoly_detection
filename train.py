@@ -204,9 +204,19 @@ if __name__ == "__main__":
 
     train_df, test_df = train_test_split(train_all, test_size=0.15, random_state=1234)
     train_df, val_df = train_test_split(train_df, test_size=0.15, random_state=1234)
-
+    
     print('Train df shape ', train_df.shape)
-    print('Test df shape ', val_df.shape)
+    print('Val df shape ', val_df.shape)
+    
+    # Filter normal samples
+    train_df = train_df[train_df['operation_type'].isin(['normal'])]
+    val_df = val_df[val_df['operation_type'].isin(['normal'])]
+    
+    print(train_df)
+    print(val_df)
+
+    print('Train df shape after filtering normal:', train_df.shape)
+    print('Val df shape after filtering normal:', val_df.shape)
 
     #TODO: Here we can select to use only normal or abnormal data for training
 
@@ -225,7 +235,7 @@ if __name__ == "__main__":
     set_seed(settings["globals"]["seed"])
     device = torch.device(settings["globals"]["device"])
     output_dir = Path(settings["globals"]["output_dir"])
-
+  
     # # # get loader
     train_loader, val_loader, train_dataset, val_dataset = get_loaders_for_training(
         settings["dataset"]["params"], settings["loader"], train_file_list, val_file_list)
@@ -261,6 +271,12 @@ if __name__ == "__main__":
         manager, settings, model, device,
         val_loader, optimizer, loss_func,
     )
+    
+    # # # copy relevant files into output_dir
+    shutil.copy("./test_config.yaml", output_dir)
+    shutil.copy("./train.py", output_dir)
+    shutil.copy("./dataset.py", output_dir)
+
 
     '''
     for batch_idx, data in enumerate(train_loader):

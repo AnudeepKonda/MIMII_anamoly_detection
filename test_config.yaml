@@ -1,8 +1,9 @@
+# Train on normal data, test on everything
 globals:
   seed: 1213
   device: cuda
   num_epochs: 50
-  output_dir: ./training_output2/
+  output_dir: ./training_output3/
   use_fold: 0
   target_sr: 32000
 
@@ -33,7 +34,7 @@ loader:
     pin_memory: False
     drop_last: True
   val:
-    batch_size: 100
+    batch_size: 24
     shuffle: False
     num_workers: 2
     pin_memory: False
