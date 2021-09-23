@@ -4,7 +4,9 @@ import time
 import math
 import random
 import copy
-
+import shutil
+import sys
+sys.path.append('./apex')
 import typing as tp
 from pathlib import Path
 from contextlib import contextmanager
@@ -12,6 +14,7 @@ from collections import defaultdict
 
 from sklearn.preprocessing import LabelEncoder
 from sklearn.model_selection import train_test_split
+import collections.abc as container_abcs
 
 from tqdm import tqdm
 import yaml
@@ -22,6 +25,8 @@ import cv2
 
 import pandas as pd
 import numpy as np
+from torch.cuda import amp
+import matplotlib.pyplot as plt
 
 # albumentations for augs
 import albumentations
@@ -46,7 +51,7 @@ from dataset import SpectrogramDataset
 
 
 ROOT = Path.cwd()
-INPUT_ROOT = ROOT / "data" / "wav_data"
+INPUT_ROOT = ROOT / "../machine_sound" #"data" / "wav_data"
 
 
 class CFG:
@@ -59,7 +64,7 @@ class CFG:
     min_lr = 1e-6
     batch_size = 16
     weight_decay = 1e-6
-    num_epochs = 10
+    num_epochs = 50
     num_classes = 4
     embedding_size = 512
     n_fold = 0
@@ -117,7 +122,7 @@ def get_loaders_for_training(
 
     return train_loader, val_loader, train_dataset, val_dataset
 
-def train_model(model, criterion, optimizer, scheduler, num_epochs, dataloaders, dataset_sizes, device):
+def train_model(model, criterion, optimizer, scheduler, num_epochs, dataloaders, dataset_sizes, device, output_dir):
     start = time.time()
     best_model_wts = copy.deepcopy(model.state_dict())
     best_loss = np.inf
@@ -177,7 +182,7 @@ def train_model(model, criterion, optimizer, scheduler, num_epochs, dataloaders,
                 best_loss = epoch_loss
                 best_model_wts = copy.deepcopy(model.state_dict())
                 PATH = f"Model_{best_loss}_epoch_{epoch}.bin"
-                torch.save(model.state_dict(), PATH)
+                torch.save(model.state_dict(), output_dir / PATH)
 
         print()
 
@@ -227,7 +232,9 @@ def run():
     print(train_all.sample(n=5, random_state=1))
     print('All df shape ', train_all.shape)
 
-    train_df, val_df = train_test_split(train_all, test_size=0.2, random_state=1234)
+    #train_df, val_df = train_test_split(train_all, test_size=0.2, random_state=1234)
+    train_df, test_df = train_test_split(train_all, test_size=0.15, random_state=1234)
+    train_df, val_df = train_test_split(train_df, test_size=0.15, random_state=1234)
 
     print('Train df shape ', train_df.shape)
     print('Test df shape ', val_df.shape)
@@ -278,7 +285,23 @@ def run():
     scheduler = lr_scheduler.CosineAnnealingLR(optimizer, T_max=CFG.T_max, eta_min=CFG.min_lr)
 
     num_epochs=CFG.num_epochs
-    model, history = train_model(model, criterion, optimizer, scheduler, num_epochs, dataloaders, dataset_sizes, device)
+    
+    shutil.copy("./test_config.yaml", output_dir)
+    shutil.copy("./train_metric_learning.py", output_dir)
+    shutil.copy("./dataset.py", output_dir)
+    model, history = train_model(model, criterion, optimizer, scheduler, num_epochs, dataloaders, dataset_sizes, device, output_dir)
+    
+    plt.style.use('fivethirtyeight')
+    plt.rcParams["font.size"] = "20"
+    fig = plt.figure(figsize=(22,8))
+    epochs = list(range(CFG.num_epochs))
+    plt.plot(epochs, history['train loss'], label='train loss')
+    plt.plot(epochs, history['valid loss'], label='valid loss')
+    plt.ylabel('Loss', fontsize=20)
+    plt.xlabel('Epoch', fontsize=20)
+    plt.legend()
+    plt.title('Loss Curve')
+    plt.savefig(output_dir /'loss.png')
 
 if __name__ == "__main__":
     run()
