@@ -1,0 +1,345 @@
+Reading files in pump machine type
+Reading files in id_04
+Reading files in id_00
+Reading files in id_06
+Reading files in id_02
+Reading files in .ipynb_checkpoints machine type
+Reading files in abnormal machine type
+Reading files in .ipynb_checkpoints
+Reading files in normal machine type
+Reading files in slider machine type
+Reading files in id_04
+Reading files in id_00
+Reading files in id_06
+Reading files in id_02
+Reading files in slider machine type
+Reading files in id_04
+Reading files in id_00
+Reading files in id_06
+Reading files in id_02
+Reading files in pump machine type
+Reading files in id_04
+Reading files in id_00
+Reading files in id_06
+Reading files in id_02
+Reading files in pump machine type
+Reading files in id_04
+Reading files in id_00
+Reading files in id_06
+Reading files in id_02
+Reading files in fan machine type
+Reading files in id_04
+Reading files in id_00
+Reading files in id_06
+Reading files in id_02
+Reading files in fan machine type
+Reading files in id_04
+Reading files in id_00
+Reading files in id_06
+Reading files in id_02
+Reading files in fan machine type
+Reading files in id_04
+Reading files in id_00
+Reading files in id_06
+Reading files in id_02
+Reading files in valve machine type
+Reading files in id_04
+Reading files in id_00
+Reading files in id_06
+Reading files in id_02
+Reading files in valve machine type
+Reading files in id_04
+Reading files in id_00
+Reading files in id_06
+Reading files in id_02
+Reading files in slider machine type
+Reading files in id_04
+Reading files in id_00
+Reading files in id_06
+Reading files in id_02
+Reading files in valve machine type
+Reading files in id_04
+Reading files in id_00
+Reading files in id_06
+Reading files in id_02
+      machine_type  ...                                      wav_file_path
+23392          fan  ...  /home/ubuntu/anudeep/machine_sound_classificat...
+16946         pump  ...  /home/ubuntu/anudeep/machine_sound_classificat...
+33934          fan  ...  /home/ubuntu/anudeep/machine_sound_classificat...
+37262          fan  ...  /home/ubuntu/anudeep/machine_sound_classificat...
+10030       slider  ...  /home/ubuntu/anudeep/machine_sound_classificat...
+
+[5 rows x 5 columns]
+All df shape  (54057, 5)
+Train df shape  (39055, 5)
+Test df shape  (6893, 5)
+train: 39055, val: 6893
+[globals]
+{'seed': 1213, 'device': 'cuda', 'num_epochs': 50, 'output_dir': './training_output4_rerun/', 'use_fold': 0, 'target_sr': 32000}
+[dataset]
+{'name': 'SpectrogramDataset', 'params': {'img_size': 224, 'melspectrogram_parameters': {'n_mels': 64, 'n_fft': 2048, 'hop_length': 512, 'power': 2.0, 'fmin': 20, 'fmax': 8000}, 'metric_learning': True}}
+[split]
+{'name': 'StratifiedKFold', 'params': {'n_splits': 5, 'random_state': 42, 'shuffle': True}}
+[loader]
+{'train': {'batch_size': 24, 'shuffle': True, 'num_workers': 2, 'pin_memory': False, 'drop_last': True}, 'val': {'batch_size': 24, 'shuffle': False, 'num_workers': 2, 'pin_memory': False, 'drop_last': False}}
+[model]
+{'name': 'resnest50_fast_1s1x64d', 'params': {'pretrained': True, 'n_classes': 4}}
+[loss]
+{'name': 'BCEWithLogitsLoss', 'params': {}}
+[optimizer]
+{'name': 'Adam', 'params': {'lr': 0.001}}
+[scheduler]
+{'name': 'CosineAnnealingLR', 'params': {'T_max': 10}}
+Embedding shape: torch.Size([1, 512])
+Epoch 1/50
+----------
+train Loss: 0.9717
+valid Loss: 0.9493
+
+Epoch 2/50
+----------
+train Loss: 0.9725
+valid Loss: 0.9748
+
+Epoch 3/50
+----------
+train Loss: 0.9748
+valid Loss: 0.9675
+
+Epoch 4/50
+----------
+train Loss: 0.2004
+valid Loss: 0.0837
+
+Epoch 5/50
+----------
+train Loss: 0.0782
+valid Loss: 0.0842
+
+Epoch 6/50
+----------
+train Loss: 0.0786
+valid Loss: 0.0856
+
+Epoch 7/50
+----------
+train Loss: 0.0791
+valid Loss: 0.0845
+
+Epoch 8/50
+----------
+train Loss: 0.0638
+valid Loss: 0.0566
+
+Epoch 9/50
+----------
+train Loss: 0.0458
+valid Loss: 0.0587
+
+Epoch 10/50
+----------
+train Loss: 0.0449
+valid Loss: 0.0565
+
+Epoch 11/50
+----------
+train Loss: 0.0442
+valid Loss: 0.0551
+
+Epoch 12/50
+----------
+train Loss: 0.0755
+valid Loss: 0.0498
+
+Epoch 13/50
+----------
+train Loss: 0.0335
+valid Loss: 0.0488
+
+Epoch 14/50
+----------
+train Loss: 0.0337
+valid Loss: 0.0493
+
+Epoch 15/50
+----------
+train Loss: 0.0336
+valid Loss: 0.0489
+
+Epoch 16/50
+----------
+train Loss: 0.0287
+valid Loss: 0.0348
+
+Epoch 17/50
+----------
+train Loss: 0.0179
+valid Loss: 0.0342
+
+Epoch 18/50
+----------
+train Loss: 0.0175
+valid Loss: 0.0354
+
+Epoch 19/50
+----------
+train Loss: 0.0172
+valid Loss: 0.0335
+
+Epoch 20/50
+----------
+train Loss: 0.0144
+valid Loss: 0.0325
+
+Epoch 21/50
+----------
+train Loss: 0.0109
+valid Loss: 0.0324
+
+Epoch 22/50
+----------
+train Loss: 0.0104
+valid Loss: 0.0326
+
+Epoch 23/50
+----------
+train Loss: 0.0117
+valid Loss: 0.0321
+
+Epoch 24/50
+----------
+train Loss: 0.0104
+valid Loss: 0.0319
+
+Epoch 25/50
+----------
+train Loss: 0.0078
+valid Loss: 0.0337
+
+Epoch 26/50
+----------
+train Loss: 0.0082
+valid Loss: 0.0338
+
+Epoch 27/50
+----------
+train Loss: 0.0077
+valid Loss: 0.0370
+
+Epoch 28/50
+----------
+train Loss: 0.0215
+valid Loss: 0.0302
+
+Epoch 29/50
+----------
+train Loss: 0.0054
+valid Loss: 0.0317
+
+Epoch 30/50
+----------
+train Loss: 0.0053
+valid Loss: 0.0311
+
+Epoch 31/50
+----------
+train Loss: 0.0058
+valid Loss: 0.0305
+
+Epoch 32/50
+----------
+train Loss: 0.0048
+valid Loss: 0.0288
+
+Epoch 33/50
+----------
+train Loss: 0.0034
+valid Loss: 0.0291
+
+Epoch 34/50
+----------
+train Loss: 0.0041
+valid Loss: 0.0289
+
+Epoch 35/50
+----------
+train Loss: 0.0038
+valid Loss: 0.0286
+
+Epoch 36/50
+----------
+train Loss: 0.0063
+valid Loss: 0.0292
+
+Epoch 37/50
+----------
+train Loss: 0.0019
+valid Loss: 0.0301
+
+Epoch 38/50
+----------
+train Loss: 0.0022
+valid Loss: 0.0303
+
+Epoch 39/50
+----------
+train Loss: 0.0018
+valid Loss: 0.0309
+
+Epoch 40/50
+----------
+train Loss: 0.0049
+valid Loss: 0.0272
+
+Epoch 41/50
+----------
+train Loss: 0.0012
+valid Loss: 0.0280
+
+Epoch 42/50
+----------
+train Loss: 0.0013
+valid Loss: 0.0271
+
+Epoch 43/50
+----------
+train Loss: 0.0010
+valid Loss: 0.0263
+
+Epoch 44/50
+----------
+train Loss: 0.0028
+valid Loss: 0.0269
+
+Epoch 45/50
+----------
+train Loss: 0.0008
+valid Loss: 0.0265
+
+Epoch 46/50
+----------
+train Loss: 0.0008
+valid Loss: 0.0254
+
+Epoch 47/50
+----------
+train Loss: 0.0009
+valid Loss: 0.0269
+
+Epoch 48/50
+----------
+train Loss: 0.0060
+valid Loss: 0.0271
+
+Epoch 49/50
+----------
+train Loss: 0.0010
+valid Loss: 0.0258
+
+Epoch 50/50
+----------
+train Loss: 0.0007
+valid Loss: 0.0264
+
+Training complete in 28h 58m 33s
+Best Loss  0.02539986025995601
