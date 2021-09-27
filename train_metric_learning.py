@@ -45,6 +45,8 @@ from torch.optim.lr_scheduler import CosineAnnealingWarmRestarts, CosineAnnealin
 from torch.optim import Adam, lr_scheduler
 from torch.optim.lr_scheduler import _LRScheduler
 
+from cuml.neighbors import NearestNeighbors
+
 from pytorch_metric_learning import losses
 
 from dataset import SpectrogramDataset
@@ -285,12 +287,12 @@ def run():
     scheduler = lr_scheduler.CosineAnnealingLR(optimizer, T_max=CFG.T_max, eta_min=CFG.min_lr)
 
     num_epochs=CFG.num_epochs
-    
+
     shutil.copy("./test_config.yaml", output_dir)
     shutil.copy("./train_metric_learning.py", output_dir)
     shutil.copy("./dataset.py", output_dir)
     model, history = train_model(model, criterion, optimizer, scheduler, num_epochs, dataloaders, dataset_sizes, device, output_dir)
-    
+
     plt.style.use('fivethirtyeight')
     plt.rcParams["font.size"] = "20"
     fig = plt.figure(figsize=(22,8))
@@ -302,6 +304,48 @@ def run():
     plt.legend()
     plt.title('Loss Curve')
     plt.savefig(output_dir /'loss.png')
+
+    ############## Inference Using Trained model ###############
+    embeds = []
+    with torch.no_grad():
+        phase = "valid"
+        # Iterate over data
+        for inputs,labels in tqdm(dataloaders[phase]):
+            inputs = inputs.to(CFG.device)
+            labels = labels.to(CFG.device)
+
+            feat = model( inputs )
+            embeddings = feat.detach().cpu().numpy()
+            embeds.append(embeddings)
+
+    image_embeddings = np.concatenate(embeds)
+    print(f'Our image embeddings shape is {image_embeddings.shape}')
+    del embeds
+    gc.collect()
+
+    # Get neighbors from image_embeddings
+    # fit model
+    KNN = 50
+    knn_model = NearestNeighbors(n_neighbors = KNN)
+    knn_model.fit(image_embeddings)
+    distances, indices = knn_model.kneighbors(image_embeddings)
+
+    ###### Idea 1
+    # if we have both normal and anomaly samples in train foldself.
+    # and Knn neighbour of a test sample is abnormal (or normal)
+
+    ###### Idea 2
+    # If we have only normal in train fold
+    # then knn neighbour of test sample distance can be used to
+    # judge it as normal or abnormal ?
+
+    threshold = 20
+    for k in range(embeddings.shape[0]):
+        # Find the neighbour inside threshold n-dim ball
+        idx = np.where(distances[k,] < threshold)[0]
+        ids = indices[k,idx]
+        dist = distances[k, idx]
+        print(ids, dist)
 
 if __name__ == "__main__":
     run()

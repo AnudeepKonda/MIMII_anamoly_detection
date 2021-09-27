@@ -8,7 +8,8 @@ import soundfile as sf
 import torch.utils.data as data
 
 import matplotlib.pyplot as plt
-
+import random
+random.seed(111)
 
 MACHINE_CODE = {
     'pump': 0, 'valve': 1, 'slider': 2, 'fan': 3
@@ -17,6 +18,30 @@ MACHINE_CODE = {
 INV_MACHINE_CODE = {v: k for k, v in MACHINE_CODE.items()}
 
 PERIOD = 10
+
+# implementation of SpecAugment paper here, without time warping
+# set percentage of frames to mask so should work with long and short segments.
+def spec_augment(spec: np.ndarray, num_mask=2,
+                 freq_masking_max_percentage=0.15, time_masking_max_percentage=0.3):
+
+    spec = spec.copy()
+    for i in range(num_mask):
+        all_frames_num, all_freqs_num = spec.shape
+        freq_percentage = random.uniform(0.0, freq_masking_max_percentage)
+
+        num_freqs_to_mask = int(freq_percentage * all_freqs_num)
+        f0 = np.random.uniform(low=0.0, high=all_freqs_num - num_freqs_to_mask)
+        f0 = int(f0)
+        spec[:, f0:f0 + num_freqs_to_mask] = 0
+
+        time_percentage = random.uniform(0.0, time_masking_max_percentage)
+
+        num_frames_to_mask = int(time_percentage * all_frames_num)
+        t0 = np.random.uniform(low=0.0, high=all_frames_num - num_frames_to_mask)
+        t0 = int(t0)
+        spec[t0:t0 + num_frames_to_mask, :] = 0
+
+    return spec
 
 class SpectrogramDataset(data.Dataset):
     def __init__(self,
@@ -74,7 +99,8 @@ class SpectrogramDataset(data.Dataset):
             melspec = librosa.power_to_db(melspec).astype(np.float32)
 
             if self.spectrogram_transforms:
-                melspec = self.spectrogram_transforms(melspec)
+                #melspec = self.spectrogram_transforms(melspec)
+                melspec = spec_augment(melspec)
             else:
                 pass
 
@@ -131,4 +157,3 @@ def mono_to_color(X: np.ndarray,
         # Just zero
         V = np.zeros_like(Xstd, dtype=np.uint8)
     return V
-                                            

@@ -19,6 +19,7 @@ dataset:
       fmin: 20
       fmax: 8000
     metric_learning: True
+    spectrogram_transforms: spec_augment
 
 split:
   name: StratifiedKFold
