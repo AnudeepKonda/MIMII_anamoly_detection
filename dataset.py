@@ -99,7 +99,8 @@ class SpectrogramDataset(data.Dataset):
             melspec = librosa.power_to_db(melspec).astype(np.float32)
 
             if self.spectrogram_transforms:
-                melspec = self.spectrogram_transforms(melspec)
+                #melspec = self.spectrogram_transforms(melspec)
+                melspec = spec_augment(melspec)
             else:
                 pass
 
