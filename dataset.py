@@ -95,14 +95,16 @@ class SpectrogramDataset(data.Dataset):
                 else:
                     transformed_y = transformed_y.astype(np.float32)
 
-            melspec = librosa.feature.melspectrogram(transformed_y, sr=sr, **self.melspectrogram_parameters)
-            melspec = librosa.power_to_db(melspec).astype(np.float32)
-
+            melspec = librosa.feature.melspectrogram(transformed_y, sr=sr, **self.melspectrogram_parameters)    
+        
             if self.spectrogram_transforms:
                 #melspec = self.spectrogram_transforms(melspec)
                 melspec = spec_augment(melspec)
             else:
                 pass
+            
+            # Is this necessary
+            melspec = librosa.power_to_db(melspec).astype(np.float32)
 
             image = mono_to_color(melspec)
             height, width, _ = image.shape
@@ -118,15 +120,15 @@ class SpectrogramDataset(data.Dataset):
 
         if self.metric_learning:
             if len(images) == 1:
-                return np.array(images[0]), MACHINE_CODE[emachine_code]
+                return melspec, MACHINE_CODE[emachine_code]#np.array(images[0]), MACHINE_CODE[emachine_code]
             else:
-                return np.array(images), MACHINE_CODE[emachine_code]
+                return melspec, MACHINE_CODE[emachine_code]#np.array(images), MACHINE_CODE[emachine_code]
 
         else:
             if len(images) == 1:
-                return np.array(images[0]), labels
+                return melspec, MACHINE_CODE[emachine_code]#np.array(images[0]), labels
             else:
-                return np.array(images), labels
+                return melspec, MACHINE_CODE[emachine_code]#np.array(images), labels
 
 
 def mono_to_color(X: np.ndarray,
