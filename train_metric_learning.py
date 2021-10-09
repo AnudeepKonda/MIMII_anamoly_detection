@@ -188,6 +188,18 @@ def train_model(model, criterion, optimizer, scheduler, num_epochs, dataloaders,
                 best_model_wts = copy.deepcopy(model.state_dict())
                 PATH = f"Model_{best_loss}_epoch_{epoch}.bin"
                 torch.save(model.state_dict(), output_dir / PATH)
+                
+                plt.style.use('fivethirtyeight')
+                plt.rcParams["font.size"] = "20"
+                fig = plt.figure(figsize=(22,8))
+                epochs = list(range(epoch))
+                plt.plot(epochs, history['train loss'], label='train loss')
+                plt.plot(epochs, history['valid loss'], label='valid loss')
+                plt.ylabel('Loss', fontsize=20)
+                plt.xlabel('Epoch', fontsize=20)
+                plt.legend()
+                plt.title('Loss Curve')
+                plt.savefig(output_dir /'loss.png')
 
         print()
 
