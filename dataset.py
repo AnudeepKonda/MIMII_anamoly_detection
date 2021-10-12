@@ -117,10 +117,15 @@ class SpectrogramDataset(data.Dataset):
         labels = np.zeros(len(MACHINE_CODE), dtype=int)
         labels[MACHINE_CODE[emachine_code]] = 1
         #print(idx, wav_path, emachine_code, labels, MACHINE_CODE[emachine_code])
+        
+        if "abnormal" in wav_path:
+            temp = 'abnormal'
+        else:
+            temp = 'normal'
 
         if self.metric_learning:
             if len(images) == 1:
-                return np.array(images[0]), MACHINE_CODE[emachine_code]#np.array(images[0]), MACHINE_CODE[emachine_code]
+                return np.array(images[0]), [MACHINE_CODE[emachine_code], temp]#np.array(images[0]), MACHINE_CODE[emachine_code]
             else:
                 return np.array(images[0]), MACHINE_CODE[emachine_code]#np.array(images), MACHINE_CODE[emachine_code]
 
