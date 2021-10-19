@@ -8,3 +8,4 @@ training_output*/
 pretrained_models/
 previous_runs/
 *.wav
+*output*/
