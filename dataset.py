@@ -47,6 +47,7 @@ def spec_augment(spec: np.ndarray, num_mask=2,
 class SpectrogramDataset(data.Dataset):
     def __init__(self,
                  file_list: tp.List[tp.List[str]],
+                 is_val=False,
                  img_size=224,
                  waveform_transforms=None,
                  spectrogram_transforms=None,
@@ -64,6 +65,7 @@ class SpectrogramDataset(data.Dataset):
         self.frames = 5
         self.n_fft = 2048
         self.hop_length = 512
+        self.is_val = is_val
 
         self.metric_learning = metric_learning
 
@@ -97,14 +99,15 @@ class SpectrogramDataset(data.Dataset):
                     transformed_y = transformed_y.astype(np.float32)
 
             melspec = librosa.feature.melspectrogram(transformed_y, sr=sr, **self.melspectrogram_parameters)    
-        
-            if self.spectrogram_transforms:
-                #melspec = self.spectrogram_transforms(melspec)
-                prob = random.uniform(0, 1)
-                if prob <= 0.5:   
-                    melspec = spec_augment(melspec)
-            else:
-                pass
+            
+            if not self.is_val:
+                if self.spectrogram_transforms:
+                    #melspec = self.spectrogram_transforms(melspec)
+                    prob = random.uniform(0, 1)
+                    if prob <= 0.5:   
+                        melspec = spec_augment(melspec)
+                else:
+                    pass
             
             # Is this necessary
             melspec = librosa.power_to_db(melspec).astype(np.float32)
@@ -127,11 +130,14 @@ class SpectrogramDataset(data.Dataset):
             temp = 'normal'
 
         if self.metric_learning:
-            if len(images) == 1:
-                return np.array(images[0]), MACHINE_CODE[emachine_code]#np.array(images[0]), MACHINE_CODE[emachine_code]
+            if not self.is_val:
+                if len(images) == 1:
+                    return np.array(images[0]), [MACHINE_CODE[emachine_code], temp]#np.array(images[0]), MACHINE_CODE[emachine_code]
+                else:
+                    return np.array(images[0]), MACHINE_CODE[emachine_code]#np.array(images), MACHINE_CODE[emachine_code]
             else:
-                return np.array(images[0]), MACHINE_CODE[emachine_code]#np.array(images), MACHINE_CODE[emachine_code]
-
+                if len(images) == 1:
+                    return np.array(images[0]), [MACHINE_CODE[emachine_code], temp]
         else:
             if len(images) == 1:
                 return np.array(images[0]), MACHINE_CODE[emachine_code]#np.array(images[0]), labels
