@@ -4,6 +4,7 @@ import cv2
 import librosa
 import numpy as np
 import pandas as pd
+import random
 import soundfile as sf
 import torch.utils.data as data
 
@@ -99,7 +100,9 @@ class SpectrogramDataset(data.Dataset):
         
             if self.spectrogram_transforms:
                 #melspec = self.spectrogram_transforms(melspec)
-                melspec = spec_augment(melspec)
+                prob = random.uniform(0, 1)
+                if prob <= 0.5:   
+                    melspec = spec_augment(melspec)
             else:
                 pass
             
@@ -125,7 +128,7 @@ class SpectrogramDataset(data.Dataset):
 
         if self.metric_learning:
             if len(images) == 1:
-                return np.array(images[0]), [MACHINE_CODE[emachine_code], temp]#np.array(images[0]), MACHINE_CODE[emachine_code]
+                return np.array(images[0]), MACHINE_CODE[emachine_code]#np.array(images[0]), MACHINE_CODE[emachine_code]
             else:
                 return np.array(images[0]), MACHINE_CODE[emachine_code]#np.array(images), MACHINE_CODE[emachine_code]
 
