@@ -140,9 +140,9 @@ class SpectrogramDataset(data.Dataset):
                     return np.array(images[0]), [MACHINE_CODE[emachine_code], temp]
         else:
             if len(images) == 1:
-                return np.array(images[0]), MACHINE_CODE[emachine_code]#np.array(images[0]), labels
+                return np.array(images[0]), labels#MACHINE_CODE[emachine_code]#np.array(images[0]), labels
             else:
-                return np.array(images[0]), MACHINE_CODE[emachine_code]#np.array(images), labels
+                return np.array(images[0]), labels#MACHINE_CODE[emachine_code]#np.array(images), labels
 
 
 def mono_to_color(X: np.ndarray,
