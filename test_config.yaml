@@ -3,7 +3,7 @@ globals:
   seed: 1213
   device: cuda
   num_epochs: 50
-  output_dir: ./training_output_4cls/
+  output_dir: ./training_output_2cls/
   use_fold: 0
   target_sr: 32000
 
@@ -46,7 +46,7 @@ model:
   name: resnest50_fast_1s1x64d
   params:
     pretrained: True
-    n_classes: 4
+    n_classes: 1
 
 loss:
   name: BCEWithLogitsLoss
