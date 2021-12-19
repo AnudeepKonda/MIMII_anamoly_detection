@@ -209,8 +209,8 @@ if __name__ == "__main__":
     print('Val df shape ', val_df.shape)
     
     # Filter normal samples
-    train_df = train_df[train_df['operation_type'].isin(['normal'])]
-    val_df = val_df[val_df['operation_type'].isin(['normal'])]
+    train_df = train_df#train_df[train_df['operation_type'].isin(['normal'])]
+    val_df = val_df#val_df[val_df['operation_type'].isin(['normal'])]
     
     print(train_df)
     print(val_df)

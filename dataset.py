@@ -100,14 +100,14 @@ class SpectrogramDataset(data.Dataset):
 
             melspec = librosa.feature.melspectrogram(transformed_y, sr=sr, **self.melspectrogram_parameters)    
             
-            if not self.is_val:
-                if self.spectrogram_transforms:
-                    #melspec = self.spectrogram_transforms(melspec)
-                    prob = random.uniform(0, 1)
-                    if prob <= 0.5:   
-                        melspec = spec_augment(melspec)
-                else:
-                    pass
+#             if not self.is_val:
+#                 if self.spectrogram_transforms:
+#                     #melspec = self.spectrogram_transforms(melspec)
+#                     prob = random.uniform(0, 1)
+#                     if prob <= 0.5:   
+#                         melspec = spec_augment(melspec)
+#                 else:
+#                     pass
             
             # Is this necessary
             melspec = librosa.power_to_db(melspec).astype(np.float32)
