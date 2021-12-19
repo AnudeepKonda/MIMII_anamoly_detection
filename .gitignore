@@ -9,3 +9,4 @@ pretrained_models/
 previous_runs/
 *.wav
 *output*/
+notebooks/*.npy
