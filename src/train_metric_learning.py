@@ -1,15 +1,16 @@
 import os
 os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
-os.environ["CUDA_VISIBLE_DEVICES"] = "2"
+os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
 # Preliminaries
 import time
+import glob
 import math
 import random
 import copy
 import shutil
 import sys
-sys.path.append('./apex')
+#sys.path.append('./apex')
 import typing as tp
 from pathlib import Path
 from contextlib import contextmanager
@@ -56,7 +57,7 @@ from dataset import SpectrogramDataset
 
 
 ROOT = Path.cwd()
-INPUT_ROOT = ROOT / "../machine_sound" #"data" / "wav_data"
+INPUT_ROOT = ROOT / "../../../../machine_sound" #"data" / "wav_data"
 
 
 class CFG:
@@ -187,7 +188,7 @@ def train_model(model, criterion, optimizer, scheduler, num_epochs, dataloaders,
                 best_loss = epoch_loss
                 best_model_wts = copy.deepcopy(model.state_dict())
                 PATH = f"Model_{best_loss}_epoch_{epoch}.bin"
-                torch.save(model.state_dict(), output_dir / PATH)
+                torch.save(model.state_dict(), str(str(output_dir) + '/' + str( PATH)))
                 
                 plt.style.use('fivethirtyeight')
                 plt.rcParams["font.size"] = "20"
@@ -218,6 +219,16 @@ def run():
 
     # 1. Parse dataset and make train/ val folds
 
+    # tmp_list = []
+    # npz_files = glob.glob(str(INPUT_ROOT) + '/*/*')
+    # for npz_file in npz_files:
+    #     wav_fpath = npz_file
+    #     wav_fname = npz_file.split('/')[-1]
+    #     machine_db_type, operation_type, machine_id, file_id, channel_no = npz_file.split('/')[-1].split('-')
+    #     machine_type = machine_db_type.split('_')[-1]
+    #     tmp_list.append( [machine_type, machine_id, operation_type,
+    #                                          wav_fname, wav_fpath])
+    
     tmp_list = []
     for decibel_value in INPUT_ROOT.iterdir():
         if decibel_value.is_file():
@@ -241,6 +252,7 @@ def run():
                         if wav_f.is_file() and wav_f.suffix == ".wav":
                             tmp_list.append( [machine_type, id_type, operation_type,
                                               wav_f.name, wav_f.as_posix()])
+        
 
     train_all = pd.DataFrame(
         tmp_list, columns=["machine_type", "id_type", "operation_type",
@@ -249,7 +261,6 @@ def run():
     print(train_all.sample(n=5, random_state=1))
     print('All df shape ', train_all.shape)
 
-    #train_df, val_df = train_test_split(train_all, test_size=0.2, random_state=1234)
     train_df, test_df = train_test_split(train_all, test_size=0.15, random_state=1234)
     train_df, val_df = train_test_split(train_df, test_size=0.15, random_state=1234)
 
@@ -263,7 +274,7 @@ def run():
 
     print("train: {}, val: {}".format(len(train_file_list), len(val_file_list)))
 
-    with open('test_config.yaml') as settings_str:
+    with open('../params/train_config_metricLearning.yaml') as settings_str:
         settings = yaml.safe_load(settings_str)
 
     for k, v in settings.items():
@@ -303,9 +314,9 @@ def run():
 
     num_epochs=CFG.num_epochs
 
-    shutil.copy("./test_config.yaml", output_dir)
-    shutil.copy("./train_metric_learning.py", output_dir)
-    shutil.copy("./dataset.py", output_dir)
+    shutil.copy("../params/train_config_metricLearning.yaml", str(output_dir)+'/'+'train_config_metricLearning.yaml')
+    shutil.copy("./train_metric_learning.py", str(output_dir)+'/'+'train_metric_learning.py')
+    shutil.copy("./dataset_npy.py", str(output_dir)+'/'+'dataset.py')
     model, history = train_model(model, criterion, optimizer, scheduler, num_epochs, dataloaders, dataset_sizes, device, output_dir)
 
     plt.style.use('fivethirtyeight')

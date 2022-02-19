@@ -3,7 +3,7 @@ globals:
   seed: 1213
   device: cuda
   num_epochs: 50
-  output_dir: ./training_output_2cls/
+  output_dir: ../training_outputs/metric_learning
   use_fold: 0
   target_sr: 32000
 
@@ -18,7 +18,7 @@ dataset:
       power: 2.0
       fmin: 20
       fmax: 8000
-    metric_learning: False
+    metric_learning: True
     spectrogram_transforms: spec_augment
 
 split:

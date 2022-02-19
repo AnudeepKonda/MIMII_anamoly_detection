@@ -1,0 +1,44 @@
+# Train on normal data, test on everything
+globals:
+  seed: 1213
+  device: cuda
+  num_epochs: 50
+  output_dir: ../training_outputs/metric_learning_urban_acoustic3/
+  use_fold: 0
+  target_sr: 32000
+
+dataset:
+  name: SpectrogramDataset
+  params:
+    img_size: 224
+    melspectrogram_parameters:
+      n_mels: 128
+      n_fft: 2048
+      hop_length: 512
+      power: 2.0
+      fmin: 20
+      fmax: 8000
+    metric_learning: True
+    spectrogram_transforms: spec_augment
+
+loader:
+  train:
+    batch_size: 8
+    shuffle: True
+    num_workers: 4
+    pin_memory: False
+    drop_last: True
+  val:
+    batch_size: 8
+    shuffle: False
+    num_workers: 2
+    pin_memory: False
+    drop_last: False
+
+model:
+  name: resnest50_fast_1s1x64d
+  params:
+    pretrained: True
+    n_classes: 2
+
+

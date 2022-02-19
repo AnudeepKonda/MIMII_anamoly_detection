@@ -10,10 +10,19 @@ import torch.utils.data as data
 
 import matplotlib.pyplot as plt
 import random
+
+import dcase_util
+
 random.seed(111)
 
+# MACHINE_CODE = {
+#     'pump': 0, 'valve': 1, 'slider': 2, 'fan': 3
+# }
+
+# INV_MACHINE_CODE = {v: k for k, v in MACHINE_CODE.items()}
+
 MACHINE_CODE = {
-    'pump': 0, 'valve': 1, 'slider': 2, 'fan': 3
+    'airport': 0,'shopping_mall': 1,'metro_station': 2,'street_pedestrian': 3,'public_square': 4,'street_traffic': 5,'tram': 6,'bus': 7,'metro': 8 ,'park': 9
 }
 
 INV_MACHINE_CODE = {v: k for k, v in MACHINE_CODE.items()}
@@ -74,31 +83,33 @@ class SpectrogramDataset(data.Dataset):
 
     def __getitem__(self, idx: int):
         wav_path, emachine_code = self.file_list[idx]
+        #print(wav_path, emachine_code)
         #sample = self.df.loc[idx, :]
         #wav_name = sample["wav_filename"]
         #machine_code = sample["machine_type"]
 
-        y, sr = sf.read( wav_path )
-        images = []
-        for channel in [self.microphone_id]:
-            if self.waveform_transforms:
-                transformed_y = self.waveform_transforms(y[:, channel])
-            else:
-                transformed_y = y[:, channel]
-                len_y = len(transformed_y)
-                effective_length = sr * PERIOD
-                if len_y < effective_length:
-                    new_y = np.zeros(effective_length, dtype=y.dtype)
-                    start = np.random.randint(effective_length - len_y)
-                    new_y[start:start + len_y] = transformed_y
-                    transformed_y = new_y.astype(np.float32)
-                elif len_y > effective_length:
-                    start = np.random.randint(len_y - effective_length)
-                    transformed_y = transformed_y[start:start + effective_length].astype(np.float32)
-                else:
-                    transformed_y = transformed_y.astype(np.float32)
+#         y, sr = sf.read( wav_path )
+#         print(y.shape, sr)
+#         images = []
+#         for channel in [self.microphone_id]:
+#             if self.waveform_transforms:
+#                 transformed_y = self.waveform_transforms(y[:, channel])
+#             else:
+#                 transformed_y = y[:, channel]
+#                 len_y = len(transformed_y)
+#                 effective_length = sr * PERIOD
+#                 if len_y < effective_length:
+#                     new_y = np.zeros(effective_length, dtype=y.dtype)
+#                     start = np.random.randint(effective_length - len_y)
+#                     new_y[start:start + len_y] = transformed_y
+#                     transformed_y = new_y.astype(np.float32)
+#                 elif len_y > effective_length:
+#                     start = np.random.randint(len_y - effective_length)
+#                     transformed_y = transformed_y[start:start + effective_length].astype(np.float32)
+#                 else:
+#                     transformed_y = transformed_y.astype(np.float32)
 
-            melspec = librosa.feature.melspectrogram(transformed_y, sr=sr, **self.melspectrogram_parameters)    
+#             melspec = librosa.feature.melspectrogram(transformed_y, sr=sr, **self.melspectrogram_parameters)    
             
 #             if not self.is_val:
 #                 if self.spectrogram_transforms:
@@ -109,15 +120,47 @@ class SpectrogramDataset(data.Dataset):
 #                 else:
 #                     pass
             
-            # Is this necessary
-            melspec = librosa.power_to_db(melspec).astype(np.float32)
+#             # Is this necessary
+#             melspec = librosa.power_to_db(melspec).astype(np.float32)
 
-            image = mono_to_color(melspec)
-            height, width, _ = image.shape
-            image = cv2.resize(image, (int(width * self.img_size / height), self.img_size))
-            image = np.moveaxis(image, 2, 0)
-            image = (image / 255.0).astype(np.float32)
-            images.append(image)
+        # extracting with 22050 sampling rate by default
+        images = []
+        audioContainer = dcase_util.containers.AudioContainer().load(filename=wav_path, fs=22050)
+        # use only one channel (NOTE: In the paper, both channels are used)
+        #print(audioContainer.data.shape)
+        if '2018' in wav_path:
+            audio = audioContainer.data[0]
+        else:
+            audio = audioContainer.data
+        #print(audio)
+        sr = audioContainer.fs
+
+        # extract mel-spectrogram. results in a time-frequency matrix of 40x500 size.
+        spec = librosa.feature.melspectrogram(y=audio, sr=sr, S=None, n_fft=883, hop_length=441, n_mels=40)
+
+        if not self.is_val:
+            if self.spectrogram_transforms:
+                #melspec = self.spectrogram_transforms(melspec)
+                prob = random.uniform(0, 1)
+                if prob <= 0.5:   
+                    spec = spec_augment(spec)
+            else:
+
+                pass
+        #print(spec.shape)
+        logmel = librosa.core.amplitude_to_db(spec)
+        #logmel = np.reshape(logmel, [1, logmel.shape[0], logmel.shape[1], 1])
+        #print(logmel.shape)
+        melspec = logmel
+
+        image = mono_to_color(melspec)
+        
+        #print(image.shape)
+        height, width, _ = image.shape
+        image = cv2.resize(image, (int(width * self.img_size / height), self.img_size))
+        image = np.moveaxis(image, 2, 0)
+        image = (image / 255.0).astype(np.float32)
+        images.append(image)
 
         # 1-hot encoding of labels
         labels = np.zeros(len(MACHINE_CODE), dtype=int)
@@ -130,21 +173,24 @@ class SpectrogramDataset(data.Dataset):
         else:
             temp = 'normal'
             temp = np.array([1., 0.])
+            
+            
+        return np.array(images[0]), MACHINE_CODE[emachine_code]
 
-        if self.metric_learning:
-            if not self.is_val:
-                if len(images) == 1:
-                    return np.array(images[0]), [MACHINE_CODE[emachine_code], temp]#np.array(images[0]), MACHINE_CODE[emachine_code]
-                else:
-                    return np.array(images[0]), MACHINE_CODE[emachine_code]#np.array(images), MACHINE_CODE[emachine_code]
-            else:
-                if len(images) == 1:
-                    return np.array(images[0]), [MACHINE_CODE[emachine_code], temp]
-        else:
-            if len(images) == 1:
-                return np.array(images[0]), temp#MACHINE_CODE[emachine_code]#np.array(images[0]), labels
-            else:
-                return np.array(images[0]), temp#MACHINE_CODE[emachine_code]#np.array(images), labels
+        # if self.metric_learning:
+        #     if not self.is_val:
+        #         if len(images) == 1:
+        #             return np.array(images[0]), [MACHINE_CODE[emachine_code], temp]#np.array(images[0]), MACHINE_CODE[emachine_code]
+        #         else:
+        #             return np.array(images[0]), MACHINE_CODE[emachine_code]#np.array(images), MACHINE_CODE[emachine_code]
+        #     else:
+        #         if len(images) == 1:
+        #             return np.array(images[0]), [MACHINE_CODE[emachine_code], temp]
+        # else:
+        #     if len(images) == 1:
+        #         return np.array(images[0]), temp#MACHINE_CODE[emachine_code]#np.array(images[0]), labels
+        #     else:
+        #         return np.array(images[0]), temp#MACHINE_CODE[emachine_code]#np.array(images), labels
 
 
 def mono_to_color(X: np.ndarray,
